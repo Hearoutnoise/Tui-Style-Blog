@@ -120,6 +120,14 @@ export async function scanElement(target, opts = {}, onReveal) {
   const H = Math.max(1, Math.round(rect.height));
   if (!html2canvas || !W || !H) { if (onReveal) onReveal(); return; }
 
+  let overlay = null;
+  let revealed = false;
+  const reveal = () => {
+    if (revealed) return;
+    revealed = true;
+    if (onReveal) onReveal();
+  };
+
   try {
     const src = await html2canvas(target, {
       backgroundColor: null,
@@ -133,11 +141,12 @@ export async function scanElement(target, opts = {}, onReveal) {
     photo.getContext('2d').drawImage(src, 0, 0, W, H);
     const ascii = renderAscii(src, W, H);
 
-    const computedBg = getComputedStyle(target).backgroundColor;
-    const bg = (computedBg && computedBg !== 'rgba(0, 0, 0, 0)' && computedBg !== 'transparent')
-      ? computedBg : '#282a36';
-
-    const overlay = document.createElement('div');
+    // The overlay that carries the dissolving content must be transparent.
+    // The live view behind it gets hidden for the duration of the dissolve so
+    // the sweep reveals whatever actually sits behind the view (for example the
+    // shared page background / dashed guide frame), instead of painting an
+    // opaque colour that would erase that background while the sweep plays.
+    overlay = document.createElement('div');
     overlay.style.cssText = [
       'position:fixed',
       `left:${rect.left}px`,
@@ -147,12 +156,17 @@ export async function scanElement(target, opts = {}, onReveal) {
       'z-index:999',
       'overflow:hidden',
       'pointer-events:none',
-      `background:${bg}`,
+      'background:transparent',
     ].join(';');
     photo.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
     ascii.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
     overlay.append(photo, ascii);
     document.body.appendChild(overlay);
+
+    // The overlay is now covering the rect with the captured snapshot, so the
+    // live element can be hidden without a visible pop. visibility hides the
+    // element while preserving its layout (so getBoundingClientRect stays valid).
+    target.style.visibility = 'hidden';
 
     const total = duration + fade;
     const t0 = performance.now();
@@ -170,9 +184,11 @@ export async function scanElement(target, opts = {}, onReveal) {
       requestAnimationFrame(frame);
     });
 
-    if (onReveal) onReveal();
-    overlay.remove();
+    reveal();
   } catch (err) {
-    if (onReveal) onReveal();
+    reveal();
+  } finally {
+    if (overlay && overlay.parentNode) overlay.remove();
+    target.style.visibility = '';
   }
 }

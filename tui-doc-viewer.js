@@ -62,7 +62,10 @@ const CSS = /* css */ `
   display: block;
   font-family: var(--tui-font);
   color: var(--dt-fg);
-  background: var(--dt-bg);
+  /* host is transparent so the shared <tui-bg> (solid colour + dashed frame)
+   * shows through during the ASCII scan dissolve. In the stable state the
+   * opaque .doc fills the host, so the background is hidden anyway. */
+  background: transparent;
   outline: none;
 }
 :host([hidden]) { display: none; }

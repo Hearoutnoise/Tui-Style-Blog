@@ -76,7 +76,10 @@ const CSS = /* css */ `
   min-height: 420px;
   font-family: var(--tui-font);
   color: var(--dt-fg);
-  background: var(--dt-bg);
+  /* host is transparent so the shared <tui-bg> (solid colour + dashed frame)
+   * shows through during the ASCII scan dissolve. In the stable state the
+   * opaque .app fills the host, so the background is hidden anyway. */
+  background: transparent;
   outline: none;
 }
 

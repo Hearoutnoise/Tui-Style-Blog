@@ -20,12 +20,16 @@
 | 文件 | 说明 |
 | ---- | ---- |
 | `tui-home.js` | 主页组件源码 (Web Component)，独立解耦 |
+| `tui-bg.js` | 共享页面背景组件 (Web Component)，德古拉纯色背景 + 四条分段虚线，可独立复用 |
 | `tui-file-manager.js` | 文件管理组件源码 (Web Component)，样式固定 |
 | `tui-doc-viewer.js` | 文章阅读组件源码 (Web Component)，独立解耦 |
 | `scan-effect.js` | 可复用的 ASCII 扫描过渡模块，供文件管理与阅读组件共用 |
 | `site.config.json` | 内容配置文件，你编辑这个文件 |
-| `build.js` | 构建脚本，把配置文件转换成数据模块 |
-| `site.content.js` | 构建生成的模块，由 `build.js` 产生 |
+| `build.js` | 构建脚本，把配置文件转换成数据模块，并把 `assets/home-ascii.jpg` 转成主页 ASCII 艺术字 |
+| `site.content.js` | 构建生成的模块，由 `build.js` 产生（文件系统数据） |
+| `assets/home-ascii.jpg` | 主页 ASCII 艺术字源图，替换它并重新构建即可换图 |
+| `tools/image-to-ascii.js` | 把图像转成 ASCII 的纯 JS 模块，供 `build.js` 调用 |
+| `site.home.js` | 构建生成的模块，导出主页 ASCII 数据 (`art` / `cols` / `rows`) |
 | `app.js` | 站点装载器，喂数据并协调文件管理到文章阅读的过渡 |
 | `index.html` | 页面骨架，含始终可见的站点页眉与页脚 |
 | `vendor/html2canvas-pro.esm.js` | 扫描效果用的像素转 canvas 库，本地静态资源 |
@@ -79,6 +83,19 @@ fm.dblclickMs = 320;        // 双击判定窗口，毫秒
 
 效果依赖 `vendor/html2canvas-pro.esm.js`。组件懒加载它，找不到时回退到 CDN，再失败则直接跳转。对 `prefers-reduced-motion` 用户自动跳过。
 
+## 页面背景组件
+
+德古拉纯色背景 + 四条分段虚线被抽成了独立的 `<tui-bg>` 组件。它是一块纯装饰层，绘制中央矩形（舞台盒）四条边上的虚线，并把虚线延伸至页面边缘。它不拦截任何点击（`pointer-events: none`）。
+
+背景与视图解耦后，扫描过渡在溶解视图时不会再把虚线盖掉：扫描层是透明的，溶解过程中它显示的是视图背后真正的背景（含虚线），而不是覆盖一层纯色。因此播放动画时若正好落在虚线上，虚线也不会消失。
+
+它是主页、文件管理与文章阅读视图共享的页面背景。主页的中央内容、文件管理面板、阅读正文都叠放在这个背景之上，并与虚线框对齐：文件管理器铺满四条虚线围成的中心矩形，阅读界面左右两边对齐两条垂直虚线，虚线向四周延伸。
+
+```html
+<script type="module" src="./tui-bg.js"></script>
+<tui-bg></tui-bg>
+```
+
 ## 配置格式
 
 一个配置由 `meta` 与 `tree` 组成。`tree` 是节点数组。
@@ -116,6 +133,22 @@ fm.dblclickMs = 320;        // 双击判定窗口，毫秒
 - 有 `href` 的文件打开时转向新标签页，不显示正文。
 - 文件名在同一目录内必须唯一。
 - `modified` 可传字符串、时间戳或 `Date`。
+
+
+## 主页 ASCII 艺术图
+
+主页右侧的 ASCII 艺术框由一张源图在构建时自动转换而来。约定：把图像复制到 `assets/home-ascii.jpg`，然后执行 `node build.js`。首次构建需要 `npm install` 安装 jimp。
+
+转换器 `tools/image-to-ascii.js` 用 jimp 读取图像，降采样成一个字符网格，把亮度映射为字符密度（越亮字符越密）。生成的字符统一用德古拉粉色（与 `:)` 相同）渲染，因此只有密度携带图像信息。结果写入 `site.home.js`，由 `app.js` 通过 `home.setAscii(art, cols, rows)` 喂给 `<tui-home>`。
+
+`<tui-home>` 会用 `ResizeObserver` 把字符网格按包含方式（contain）缩放，居中填入 `.ascii` 方块，不裁切、不变形。
+
+更换源图只需要替换 `assets/home-ascii.jpg` 再构建一次。
+
+```bash
+cp 新图.jpg assets/home-ascii.jpg
+node build.js
+```
 
 ## 使用组件
 
@@ -181,10 +214,10 @@ fm.setFileSystem(fileSystem);
 - 主内容位于中央矩形，围绕黄金分割排版。
 - 左上角的 `MY BLOG` 使用 figlet 生成的 ASCII 艺术字（ANSI Shadow 样式），右侧边缘接近 `:)`。
 - `:)` 位于中心矩形右侧黄金分割处并带矩形边框。
-- `:)` 右侧是一个 ASCII 艺术占位框（暂时留空，保留矩形边框）。
-- 黄金分割线上有垂直排列的 `HELLO WORLD`。
-- `MY BLOG` 下方放哲学名言。
-- 底部是一行操作区：个人简介（占位，不跳转）、打开文件管理界面（使用扫描过渡）、`点击左侧` 标签，以及一个指向左侧的箭头，箭头位于 `HELLO WORLD` 正下方，箭头外方块与上方 `:)` 的外方块同尺寸。
+- `:)` 右侧是一个 ASCII 艺术框，保留矩形边框与半透明背景，里面由构建时从 `assets/home-ascii.jpg` 生成的 ASCII 艺术图填充，颜色与 `:)` 相同。
+- 黄金分割线上有垂直排列的 `HELLO WORLD`，颜色与 `:)` 相同。
+- `MY BLOG` 下方是警句正文，像文章正文一样往下平铺，其底端与右侧空白占位框下方大致平齐，无左侧竖线。
+- 底部操作区居中放置 `个人简介` 与 `打开文件管理` 两个按钮，无箭头、无方块、无 `点击左侧` 标签，`打开文件管理` 无紫色高亮。
 
 页面之间的切换都由 `app.js` 协调，均复用 `scan-effect.js` 的扫描效果。点击主页的 `打开文件管理` 会先播放扫描，再进入文件管理器。
 

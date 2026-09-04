@@ -1,0 +1,2 @@
+# Build dependencies (only needed by `node build.js` to convert images to ASCII)
+node_modules/

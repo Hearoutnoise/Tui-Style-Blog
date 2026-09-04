@@ -1,0 +1,23 @@
+{
+  "name": "tui-style-blog",
+  "version": "1.0.0",
+  "description": "一个解耦的、tui 风格的目录系统前端组件。它渲染一个类似终端文本界面 (TUI) 的文件管理器，可作为静态站点展示文章。",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hearoutnoise/Tui-Style-Blog.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Hearoutnoise/Tui-Style-Blog/issues"
+  },
+  "homepage": "https://github.com/Hearoutnoise/Tui-Style-Blog#readme",
+  "dependencies": {
+    "jimp": "^0.22.12"
+  }
+}
