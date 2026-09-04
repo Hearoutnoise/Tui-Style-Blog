@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/Hearoutnoise/Tui-Style-Blog#readme",
   "dependencies": {
+    "figlet": "^1.11.4",
     "jimp": "^0.22.12"
   }
 }

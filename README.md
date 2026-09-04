@@ -25,9 +25,10 @@
 | `tui-doc-viewer.js` | 文章阅读组件源码 (Web Component)，独立解耦 |
 | `scan-effect.js` | 可复用的 ASCII 扫描过渡模块，供文件管理与阅读组件共用 |
 | `site.config.json` | 内容配置文件，你编辑这个文件 |
-| `build.js` | 构建脚本，把配置文件转换成数据模块，并把 `assets/home-ascii.jpg` 转成主页 ASCII 艺术字 |
+| `build.js` | 构建脚本，把配置文件转换成数据模块，并把 `assets/home-ascii.jpg` 与 `assets/home-smile.jpg` 转成主页 ASCII 艺术字 |
 | `site.content.js` | 构建生成的模块，由 `build.js` 产生（文件系统数据） |
-| `assets/home-ascii.jpg` | 主页 ASCII 艺术字源图，替换它并重新构建即可换图 |
+| `assets/home-ascii.jpg` | 主页右侧 ASCII 艺术图源图，替换它并重新构建即可换图 |
+| `assets/home-smile.jpg` | 主页 `:)` ASCII 艺术字源图，替换它并重新构建即可换图 |
 | `tools/image-to-ascii.js` | 把图像转成 ASCII 的纯 JS 模块，供 `build.js` 调用 |
 | `site.home.js` | 构建生成的模块，导出主页 ASCII 数据 (`art` / `cols` / `rows`) |
 | `app.js` | 站点装载器，喂数据并协调文件管理到文章阅读的过渡 |
@@ -137,16 +138,17 @@ fm.dblclickMs = 320;        // 双击判定窗口，毫秒
 
 ## 主页 ASCII 艺术图
 
-主页右侧的 ASCII 艺术框由一张源图在构建时自动转换而来。约定：把图像复制到 `assets/home-ascii.jpg`，然后执行 `node build.js`。首次构建需要 `npm install` 安装 jimp。
+主页有两块 ASCII 艺术，都由源图在构建时自动转换而来：右侧的图片框读 `assets/home-ascii.jpg`，`:)` 方块读 `assets/home-smile.jpg`。约定：把图像复制到对应路径，然后执行 `node build.js`。首次构建需要 `npm install` 安装 jimp。
 
-转换器 `tools/image-to-ascii.js` 用 jimp 读取图像，降采样成一个字符网格，把亮度映射为字符密度（越亮字符越密）。生成的字符统一用德古拉粉色（与 `:)` 相同）渲染，因此只有密度携带图像信息。结果写入 `site.home.js`，由 `app.js` 通过 `home.setAscii(art, cols, rows)` 喂给 `<tui-home>`。
+转换器 `tools/image-to-ascii.js` 用 jimp 读取图像，降采样成一个字符网格，把亮度映射为字符密度（越亮字符越密）。生成的字符统一用德古拉粉色（与 `:)` 相同）渲染，因此只有密度携带图像信息。两块结果分别写入 `site.home.js` 的 `homeAscii` 与 `homeSmile`，由 `app.js` 通过 `home.setAscii(...)`、`home.setSmile(...)` 喂给 `<tui-home>`。
 
-`<tui-home>` 会用 `ResizeObserver` 把字符网格按包含方式（contain）缩放，居中填入 `.ascii` 方块，不裁切、不变形。
+`<tui-home>` 会用 `ResizeObserver` 把字符网格按包含方式（contain）缩放，居中填入对应方块，不裁切、不变形。
 
-更换源图只需要替换 `assets/home-ascii.jpg` 再构建一次。
+更换源图只需要替换对应路径再构建一次。
 
 ```bash
-cp 新图.jpg assets/home-ascii.jpg
+cp 新图.jpg assets/home-ascii.jpg   # 右侧图片框
+cp 新图.jpg assets/home-smile.jpg   # :) 方块
 node build.js
 ```
 
@@ -213,10 +215,10 @@ fm.setFileSystem(fileSystem);
 - 四条分割虚线，恰好是文件管理器四个边缘的延伸。
 - 主内容位于中央矩形，围绕黄金分割排版。
 - 左上角的 `MY BLOG` 使用 figlet 生成的 ASCII 艺术字（ANSI Shadow 样式），右侧边缘接近 `:)`。
-- `:)` 位于中心矩形右侧黄金分割处并带矩形边框。
+- `:)` 是位于中心矩形右侧黄金分割处的 `:)` 外形 ASCII 艺术字（由 `assets/home-smile.jpg` 构建生成），带粉色边框。
 - `:)` 右侧是一个 ASCII 艺术框，保留矩形边框与半透明背景，里面由构建时从 `assets/home-ascii.jpg` 生成的 ASCII 艺术图填充，颜色与 `:)` 相同。
-- 黄金分割线上有垂直排列的 `HELLO WORLD`，颜色与 `:)` 相同。
-- `MY BLOG` 下方是警句正文，像文章正文一样往下平铺，其底端与右侧空白占位框下方大致平齐，无左侧竖线。
+- 黄金分割线上有垂直排列的 `HELLO WORLD`（figlet Pagga 风格 ASCII 艺术字），颜色与 `:)` 相同。
+- `MY BLOG` 下方是警句正文，以终端日志（log）样式呈现：每行 `[时间] INFO "名言"  — 作者`，无空行，沿用原有灰色。三条名言分别取自 Alan Turing、Edsger W. Dijkstra、Linus Torvalds，时间用真实日期（无具体时刻则记零点）。
 - 底部操作区居中放置 `个人简介` 与 `打开文件管理` 两个按钮，无箭头、无方块、无 `点击左侧` 标签，`打开文件管理` 无紫色高亮。
 
 页面之间的切换都由 `app.js` 协调，均复用 `scan-effect.js` 的扫描效果。点击主页的 `打开文件管理` 会先播放扫描，再进入文件管理器。

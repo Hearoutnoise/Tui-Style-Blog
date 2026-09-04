@@ -47,7 +47,9 @@ const CSS = /* css */ `
   --dt-pink: ${PALETTE.pink};
   --tui-font: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code',
     'Cascadia Mono', 'Source Code Pro', Menlo, Consolas, 'Liberation Mono',
-    monospace;
+    'PingFang SC', 'Microsoft YaHei', 'DengXian',
+    'Noto Sans CJK SC', 'Source Han Sans SC', 'WenQuanYi Micro Hei',
+    'SimSun', monospace, sans-serif;
   --tui-line: ${PALETTE.current};
   --gold: 61.8%;
   --box-w: min(1080px, calc(100% - 48px));
@@ -81,7 +83,7 @@ const CSS = /* css */ `
   position: absolute;
   left: 3.5%;
   top: 2.5%;
-  width: 46%;
+  width: 53%;
 }
 .brand {
   margin: 0;
@@ -102,13 +104,22 @@ const CSS = /* css */ `
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.2ch;
-  height: 2.1em;
+  width: 58px;
+  height: 58px;
   border: 2px solid var(--dt-pink);
   color: var(--dt-pink);
   font-size: 1.9rem;
   font-weight: 700;
   line-height: 1;
+  overflow: hidden;
+}
+.smile__art {
+  margin: 0;
+  white-space: pre;
+  line-height: 1;
+  color: var(--dt-pink);
+  font-family: var(--tui-font);
+  font-size: 16px;
 }
 .ascii {
   position: absolute;
@@ -138,11 +149,12 @@ const CSS = /* css */ `
   bottom: 26%;
   transform: translateX(-50%);
   writing-mode: vertical-rl;
-  font-size: clamp(0.95rem, 2vw, 1.7rem);
+  font-size: calc(var(--box-h) * 0.59 / 42);
   font-weight: 700;
-  letter-spacing: .3em;
+  letter-spacing: 0;
   color: var(--dt-pink);
-  white-space: nowrap;
+  white-space: pre;
+  line-height: 1;
 }
 .quote {
   margin: 0;
@@ -184,11 +196,11 @@ const TEMPLATE = /* html */ `
 ██║╚██╔╝██║  ╚██╔╝      ██╔══██╗██║     ██║   ██║██║   ██║
 ██║ ╚═╝ ██║   ██║       ██████╔╝███████╗╚██████╔╝╚██████╔╝
 ╚═╝     ╚═╝   ╚═╝       ╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝</pre>
-    <blockquote class="quote">"Simplicity is the ultimate sophistication."\n— Leonardo da Vinci\n\n"Stay hungry, stay foolish."\n— Steve Jobs\n\n"Talk is cheap. Show me the code."\n— Linus Torvalds</blockquote>
+    <blockquote class="quote">[1950-10-01 00:00:00] INFO  "We can only see a short distance ahead, but we can see plenty there that needs to be done."  — Alan Turing\n[1975-06-18 00:00:00] INFO  "Simplicity is prerequisite for reliability."  — Edsger W. Dijkstra\n[2000-08-25 11:09:12] INFO  "Talk is cheap. Show me the code."  — Linus Torvalds</blockquote>
     </div>
-    <span class="smile">:)</span>
+    <span class="smile"><pre class="smile__art"></pre></span>
     <div class="ascii" aria-label="ascii art 占位"><pre class="ascii__art"></pre></div>
-    <div class="vertical">HELLO WORLD</div>
+    <div class="vertical">░█░█░█▀▀░█░░░█░░░█▀█░░░█░█░█▀█░█▀▄░█░░░█▀▄\n░█▀█░█▀▀░█░░░█░░░█░█░░░█▄█░█░█░█▀▄░█░░░█░█\n░▀░▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░░░▀░▀░▀▀▀░▀░▀░▀▀▀░▀▀░</div>
     <div class="cta">
       <button class="btn btn--bio" type="button" title="个人简介（待设计）">个人简介</button>
       <button class="btn btn--fm" type="button" data-open-fm>打开文件管理</button>
@@ -212,7 +224,8 @@ class TuiHome extends HTMLElement {
     this._bioBtn = root.querySelector('.btn--bio');
     this._asciiBox = root.querySelector('.ascii');
     this._asciiPre = root.querySelector('.ascii__art');
-    this._asciiArt = null;
+    this._smileBox = root.querySelector('.smile');
+    this._smilePre = root.querySelector('.smile__art');
 
     this.scanEnabled = true;
     this.scanDirection = 'ltr';
@@ -223,29 +236,36 @@ class TuiHome extends HTMLElement {
       this.dispatchEvent(new CustomEvent('open-fm', { bubbles: true, composed: true }));
     });
 
-    if (this._asciiBox && 'ResizeObserver' in globalThis) {
-      this._asciiRO = new ResizeObserver(() => this._fitAscii());
-      this._asciiRO.observe(this._asciiBox);
+    if ('ResizeObserver' in globalThis) {
+      const fitAll = () => {
+        this._fitArt(this._asciiPre, this._asciiBox);
+        this._fitArt(this._smilePre, this._smileBox);
+      };
+      this._ro = new ResizeObserver(fitAll);
+      if (this._asciiBox) this._ro.observe(this._asciiBox);
+      if (this._smileBox) this._ro.observe(this._smileBox);
     }
   }
 
-  /** Render ASCII artwork into the right-hand reserved box. */
+  /** Render ASCII artwork into the right-hand picture box. */
   setAscii(art, cols, rows) {
-    this._asciiArt = { art: art || '', cols, rows };
-    this._renderAscii();
+    this._setArt(this._asciiPre, this._asciiBox, art);
   }
 
-  _renderAscii() {
-    if (!this._asciiPre) return;
-    this._asciiPre.textContent = (this._asciiArt && this._asciiArt.art) || '';
-    this._fitAscii();
+  /** Render ASCII artwork into the smiley box. */
+  setSmile(art, cols, rows) {
+    this._setArt(this._smilePre, this._smileBox, art);
   }
 
-  /** Scale the artwork so it fits (contain) inside the box without clipping. */
-  _fitAscii() {
-    const pre = this._asciiPre;
-    const box = this._asciiBox;
-    if (!pre || !box || !this._asciiArt || !this._asciiArt.art) return;
+  _setArt(pre, box, art) {
+    if (!pre) return;
+    pre.textContent = art || '';
+    this._fitArt(pre, box);
+  }
+
+  /** Scale an artwork <pre> so it fits (contain) inside its box without clipping. */
+  _fitArt(pre, box) {
+    if (!pre || !box || !pre.textContent) return;
 
     // Measure the artwork at a reference font size using an off-screen probe.
     const probe = document.createElement('pre');

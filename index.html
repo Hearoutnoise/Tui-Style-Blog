@@ -15,7 +15,10 @@
       --dt-green: #50fa7b;
       --dt-pink: #ff79c6;
       --mt: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code',
-        Menlo, Consolas, monospace;
+        Menlo, Consolas,
+        'PingFang SC', 'Microsoft YaHei', 'DengXian',
+        'Noto Sans CJK SC', 'Source Han Sans SC', 'WenQuanYi Micro Hei',
+        'SimSun', monospace, sans-serif;
       color-scheme: dark;
     }
     * { box-sizing: border-box; }
@@ -49,12 +52,15 @@
       gap: 16px;
       padding: 10px 20px;
     }
-    .site-header__brand { display: flex; align-items: center; gap: 8px; user-select: none; }
-    .site-header__brand .dot { color: var(--dt-green); font-size: 11px; line-height: 1; }
-    .site-header__brand .name { color: var(--dt-purple); font-weight: 700; letter-spacing: .12em; }
-    .site-header__brand .sep { color: var(--dt-comment); }
-    .site-header__brand .sub { color: var(--dt-comment); font-size: 11px; letter-spacing: .06em; }
-    .site-nav { display: flex; align-items: center; gap: 6px; }
+    .site-header__brand { display: flex; align-items: center; gap: 8px; user-select: none; flex: none; }
+    .site-header__brand .brand__text {
+      color: var(--dt-purple);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+    .site-nav { display: flex; align-items: center; gap: 6px; flex: none; }
     .site-nav .nav__link {
       color: var(--dt-fg);
       text-decoration: none;
@@ -115,11 +121,8 @@
 <body>
   <header class="site-header">
     <div class="site-header__inner">
-      <span class="site-header__brand" title="TUI-FS">
-        <span class="dot">●</span>
-        <span class="name">TUI-FS</span>
-        <span class="sep">/</span>
-        <span class="sub">self-hosted blog</span>
+      <span class="site-header__brand" title="Fireworks fall like rain.">
+        <span class="brand__text">Fireworks fall like rain.</span>
       </span>
       <nav class="site-nav">
         <a class="nav__link is-active" href="#home" data-nav="home">Home</a>
@@ -139,8 +142,8 @@
 
   <footer class="site-footer">
     <div class="site-footer__inner">
-      <span>© TUI-FS · self-hosted</span>
-      <span>解耦 Web Component · Dracula 配色</span>
+      <span>© All rights reserved</span>
+      <span>68 65 6C 6C 6F  77 6F 72 6C 64</span>
     </div>
   </footer>
 

@@ -63,7 +63,9 @@ const CSS = /* css */ `
   /* Monospace stack to reproduce the terminal grid. */
   --tui-font: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code',
     'Cascadia Mono', 'Source Code Pro', Menlo, Consolas, 'Liberation Mono',
-    monospace;
+    'PingFang SC', 'Microsoft YaHei', 'DengXian',
+    'Noto Sans CJK SC', 'Source Han Sans SC', 'WenQuanYi Micro Hei',
+    'SimSun', monospace, sans-serif;
 
   /* Line color and radius. Right angles only. */
   --tui-line: ${PALETTE.current};

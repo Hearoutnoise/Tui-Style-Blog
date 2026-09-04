@@ -18,7 +18,7 @@ import './tui-doc-viewer.js';
 import './tui-home.js';
 import './tui-bg.js';
 import { fileSystem, siteMeta } from './site.content.js';
-import { homeAscii } from './site.home.js';
+import { homeAscii, homeSmile } from './site.home.js';
 
 /* ---- Element refs ------------------------------------------------------- */
 const fm = document.querySelector('tui-file-manager');
@@ -40,6 +40,7 @@ home.scanDuration = fm.scanDuration;
 home.scanFade = fm.scanFade;
 home.scanDirection = fm.scanDirection;
 home.setAscii(homeAscii.art, homeAscii.cols, homeAscii.rows);
+home.setSmile(homeSmile.art, homeSmile.cols, homeSmile.rows);
 
 /* ---- View state ----------------------------------------------------------- */
 const navHome = document.querySelector('[data-nav="home"]');

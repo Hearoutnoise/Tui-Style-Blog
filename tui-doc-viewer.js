@@ -55,7 +55,9 @@ const CSS = /* css */ `
   --dt-pink: ${PALETTE.pink};
   --tui-font: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code',
     'Cascadia Mono', 'Source Code Pro', Menlo, Consolas, 'Liberation Mono',
-    monospace;
+    'PingFang SC', 'Microsoft YaHei', 'DengXian',
+    'Noto Sans CJK SC', 'Source Han Sans SC', 'WenQuanYi Micro Hei',
+    'SimSun', monospace, sans-serif;
   --tui-line: ${PALETTE.current};
   --tui-radius: 0px;
 
