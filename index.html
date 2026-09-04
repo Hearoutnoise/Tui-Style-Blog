@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TUI File Manager — Blog</title>
+  <style>
+    :root {
+      --dt-bg: #282a36;
+      --dt-current: #44475a;
+      --dt-fg: #f8f8f2;
+      --dt-comment: #6272a4;
+      --dt-purple: #bd93f9;
+      --dt-cyan: #8be9fd;
+      --dt-green: #50fa7b;
+      --dt-pink: #ff79c6;
+      --mt: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code',
+        Menlo, Consolas, monospace;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--dt-bg);
+      color: var(--dt-fg);
+      font-family: var(--mt);
+    }
+
+    /* ---- Site header (always on top) ------------------------------------- */
+    .site-header {
+      flex: none;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--dt-bg);
+      border-bottom: 1px solid var(--dt-current);
+    }
+    .site-header__inner {
+      max-width: 1128px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 20px;
+    }
+    .site-header__brand { display: flex; align-items: center; gap: 8px; user-select: none; }
+    .site-header__brand .dot { color: var(--dt-green); font-size: 11px; line-height: 1; }
+    .site-header__brand .name { color: var(--dt-purple); font-weight: 700; letter-spacing: .12em; }
+    .site-header__brand .sep { color: var(--dt-comment); }
+    .site-header__brand .sub { color: var(--dt-comment); font-size: 11px; letter-spacing: .06em; }
+    .site-nav { display: flex; align-items: center; gap: 6px; }
+    .site-nav .nav__link {
+      color: var(--dt-fg);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 5px 12px;
+      border: 1px solid transparent;
+      border-radius: 0;
+      cursor: pointer;
+    }
+    .site-nav .nav__link:hover { background: rgba(68, 71, 90, .45); color: var(--dt-pink); }
+    .site-nav .nav__link.is-active { border-color: var(--dt-purple); color: var(--dt-purple); }
+    .site-nav .nav__link--muted { color: var(--dt-comment); }
+
+    /* ---- Main area (the TUI stage) --------------------------------------- */
+    .page-main {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .stage {
+      position: relative;
+      width: min(1080px, calc(100% - 48px));
+      height: min(640px, calc(100vh - 150px));
+    }
+    tui-file-manager { width: 100%; height: 100%; }
+    .page-main > tui-doc-viewer {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(1080px, calc(100% - 48px));
+      z-index: 40;
+    }
+
+    /* ---- Site footer (always on bottom) ---------------------------------- */
+    .site-footer {
+      flex: none;
+      background: var(--dt-bg);
+      border-top: 1px solid var(--dt-current);
+    }
+    .site-footer__inner {
+      max-width: 1128px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 9px 20px;
+      font-size: 11px;
+      color: var(--dt-comment);
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <span class="site-header__brand" title="TUI-FS">
+        <span class="dot">●</span>
+        <span class="name">TUI-FS</span>
+        <span class="sep">/</span>
+        <span class="sub">self-hosted blog</span>
+      </span>
+      <nav class="site-nav">
+        <a class="nav__link is-active" href="#home" data-nav="home">Home</a>
+        <a class="nav__link" href="#files" data-nav="files">File Manager</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <tui-home hidden></tui-home>
+    <div class="stage">
+      <tui-file-manager></tui-file-manager>
+    </div>
+    <tui-doc-viewer hidden></tui-doc-viewer>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <span>© TUI-FS · self-hosted</span>
+      <span>解耦 Web Component · Dracula 配色</span>
+    </div>
+  </footer>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
