@@ -12,102 +12,85 @@ export const fileSystem = {
   "modified": "",
   "children": [
     {
-      "name": "Archive",
+      "name": "计算机图形学",
       "type": "dir",
-      "modified": "Sep 05 02:33",
+      "modified": "",
+      "children": []
+    },
+    {
+      "name": "人工智能",
+      "type": "dir",
+      "modified": "",
+      "children": []
+    },
+    {
+      "name": "随笔",
+      "type": "dir",
+      "modified": "",
+      "children": []
+    },
+    {
+      "name": "About",
+      "type": "dir",
+      "modified": "Sep 05 22:58",
       "children": [
         {
-          "name": "reading-list.md",
+          "name": "ascii-art.md",
           "type": "file",
-          "size": 163,
-          "modified": "Aug 01 03:00",
-          "path": "content/Archive/reading-list.md",
-          "title": "Reading List",
-          "date": "Aug 01 2026",
+          "size": 740,
+          "modified": "Sep 05 12:00",
+          "path": "content/About/ascii-art.md",
+          "title": "ASCII Art",
+          "date": "Sep 05 2026",
+          "summary": "A short introduction to ASCII art.",
           "tags": [
-            "notes"
+            "ascii"
           ]
-        }
-      ]
-    },
-    {
-      "name": "Links",
-      "type": "dir",
-      "modified": "Sep 05 02:33",
-      "children": [
-        {
-          "name": "dracula.md",
-          "type": "file",
-          "size": 248,
-          "modified": "",
-          "path": "content/Links/dracula.md",
-          "title": "Dracula Theme",
-          "date": "Aug 25 09:00",
-          "href": "https://draculatheme.com",
-          "summary": "The color scheme used by this site."
-        }
-      ]
-    },
-    {
-      "name": "Pinned",
-      "type": "dir",
-      "modified": "Sep 05 02:33",
-      "children": [
-        {
-          "name": "about.md",
-          "type": "file",
-          "size": 193,
-          "modified": "Aug 27 20:40",
-          "path": "content/Pinned/about.md",
-          "title": "About",
-          "date": "Aug 27 2026",
-          "tags": [
-            "meta"
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Posts",
-      "type": "dir",
-      "modified": "Sep 05 02:33",
-      "children": [
+        },
         {
           "name": "dracula-theme.md",
           "type": "file",
-          "size": 314,
-          "modified": "Aug 30 18:05",
-          "path": "content/Posts/dracula-theme.md",
-          "title": "Why I Chose Dracula",
-          "date": "Aug 30 2026",
+          "size": 797,
+          "modified": "Sep 05 12:00",
+          "path": "content/About/dracula-theme.md",
+          "title": "The Dracula Theme",
+          "date": "Sep 05 2026",
+          "summary": "A short introduction to the Dracula color scheme.",
           "tags": [
-            "design",
-            "color"
+            "theme"
           ]
+        }
+      ]
+    },
+    {
+      "name": "DCC工具链",
+      "type": "dir",
+      "modified": "",
+      "children": [
+        {
+          "name": "Blender",
+          "type": "dir",
+          "modified": "",
+          "children": []
         },
         {
-          "name": "hello-world.md",
-          "type": "file",
-          "size": 495,
-          "modified": "Aug 31 13:40",
-          "path": "content/Posts/hello-world.md",
-          "title": "Hello World",
-          "date": "Aug 31 2026",
-          "tags": [
-            "intro",
-            "meta"
-          ]
-        },
-        {
-          "name": "tui-in-the-browser.md",
-          "type": "file",
-          "size": 332,
-          "modified": "Aug 28 22:12",
-          "path": "content/Posts/tui-in-the-browser.md",
-          "title": "TUI in the Browser",
-          "date": "Aug 28 2026",
-          "tags": [
-            "frontend"
+          "name": "Procreate",
+          "type": "dir",
+          "modified": "Sep 06 00:29",
+          "children": [
+            {
+              "name": "如何解决电容笔抖动.md",
+              "type": "file",
+              "size": 1281,
+              "modified": "Sep 05 12:00",
+              "path": "content/DCC工具链/Procreate/如何解决电容笔抖动.md",
+              "title": "如何解决电容笔抖动",
+              "date": "Sep 05 2026",
+              "summary": "使用procreate内置设置解决电容笔抖动",
+              "tags": [
+                "procreate"
+              ]
+            }
           ]
         }
       ]
