@@ -17,6 +17,7 @@ import './tui-file-manager.js';
 import './tui-doc-viewer.js';
 import './tui-home.js';
 import './tui-bg.js';
+import './tui-dialog.js';
 import { fileSystem, siteMeta } from './site.content.js';
 import { homeAscii, homeSmile } from './site.home.js';
 
@@ -77,13 +78,21 @@ function navTo(dest) {
 syncView('home');
 
 /* ---- File open -> scan -> doc viewer ------------------------------------- */
-fm.addEventListener('open', (e) => {
+fm.addEventListener('open', async (e) => {
   const node = e.detail.node;
   if (node.href) { window.open(node.href, '_blank', 'noopener'); return; }
+  let content = '*empty*';
+  try {
+    const res = await fetch(node.path);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    content = await res.text();
+  } catch (err) {
+    console.warn('could not load ' + node.path + ': ' + err.message);
+  }
   fm.playScan(() => {
     home.hidden = true;
     stage.hidden = true;
-    viewer.open(node);
+    viewer.open({ ...node, content });
   });
 });
 
@@ -96,6 +105,15 @@ viewer.addEventListener('close', () => {
 
 /* ---- Home -> file manager -------------------------------------------------- */
 home.addEventListener('open-fm', () => scanSwitch('fm'));
+
+/* ---- About dialog (generic dialog component) ------------------------------ */
+const dialog = document.querySelector('tui-dialog');
+const aboutContent =
+  '<p>Studying at university.</p>' +
+  '<p>I write code, research new things, develop games, and draw.</p>';
+home.addEventListener('open-about', () => {
+  dialog.open({ title: 'About', content: aboutContent });
+});
 
 /* ---- Site header navigation ------------------------------------------------ */
 if (navFiles) navFiles.addEventListener('click', (e) => { e.preventDefault(); navTo('fm'); });

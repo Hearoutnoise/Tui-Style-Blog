@@ -218,7 +218,13 @@ function inline(src) {
   return s;
 }
 function renderMarkdown(src) {
-  const blocks = String(src).replace(/\r\n/g, '\n').split(/\n{2,}/);
+  let s = String(src).replace(/\r\n/g, '\n');
+  // Strip a leading YAML front-matter block: it is metadata, not body content.
+  if (s.slice(0, 3) === '---') {
+    const fm = /\n---\s*\n/.exec(s);
+    if (fm) s = s.slice(fm.index + fm[0].length);
+  }
+  const blocks = s.split(/\n{2,}/);
   let html = '';
   for (const block of blocks) {
     if (!block.trim()) continue;

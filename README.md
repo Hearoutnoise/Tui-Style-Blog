@@ -24,9 +24,11 @@
 | `tui-file-manager.js` | 文件管理组件源码 (Web Component)，样式固定 |
 | `tui-doc-viewer.js` | 文章阅读组件源码 (Web Component)，独立解耦 |
 | `scan-effect.js` | 可复用的 ASCII 扫描过渡模块，供文件管理与阅读组件共用 |
-| `site.config.json` | 内容配置文件，你编辑这个文件 |
-| `build.js` | 构建脚本，把配置文件转换成数据模块，并把 `assets/home-ascii.jpg` 与 `assets/home-smile.jpg` 转成主页 ASCII 艺术字 |
-| `site.content.js` | 构建生成的模块，由 `build.js` 产生（文件系统数据） |
+| `tui-dialog.js` | 泛用弹窗组件 (Web Component)，打开时把整页转成 ASCII 并涟漪扩散，右上角 `×` 或 `Esc` 关闭 |
+| `content/` | 文章 Markdown 目录，结构即文件系统树，正文带 front-matter 元数据 |
+| `site.config.json` | 站点 `meta`（标题、root 等），树结构改由 `content/` 决定 |
+| `build.js` | 构建脚本，扫描 `content/` 生成 `site.content.js` 索引，并把 `assets/home-ascii.jpg` 与 `assets/home-smile.jpg` 转成主页 ASCII 艺术字 |
+| `site.content.js` | 构建生成的索引模块，只含树结构与元数据，不含正文 |
 | `assets/home-ascii.jpg` | 主页右侧 ASCII 艺术图源图，替换它并重新构建即可换图 |
 | `assets/home-smile.jpg` | 主页 `:)` ASCII 艺术字源图，替换它并重新构建即可换图 |
 | `tools/image-to-ascii.js` | 把图像转成 ASCII 的纯 JS 模块，供 `build.js` 调用 |
@@ -41,13 +43,13 @@
 
 ## 快速更新内容
 
-修改 `site.config.json`，重新构建，刷新页面。
+在 `content/` 加一个 Markdown 文件（或子文件夹），重新构建，刷新页面。
 
 ```bash
 node build.js
 ```
 
-`--watch` 可以监听配置文件变化并自动重建。
+`--watch` 会监听 `content/`、配置与图片变化并自动重建。
 
 ```bash
 node build.js --watch
@@ -97,43 +99,33 @@ fm.dblclickMs = 320;        // 双击判定窗口，毫秒
 <tui-bg></tui-bg>
 ```
 
-## 配置格式
+## 内容目录（content/）
 
-一个配置由 `meta` 与 `tree` 组成。`tree` 是节点数组。
+文章正文以 Markdown 文件放在 `content/` 里。子文件夹=目录，`.md` 文件=文件，结构即文件系统树。每个 `.md` 可用 `---` 包围一段 YAML 前置元数据（front-matter）。
 
-```json
-{
-  "meta": { "title": "TUI-FS", "root": "~" },
-  "tree": [
-    {
-      "name": "Posts",
-      "children": [
-        {
-          "name": "hello-world.md",
-          "title": "Hello World",
-          "date": "Aug 31 2026",
-          "tags": ["intro"],
-          "content": "# Hello World\n\nFirst post."
-        }
-      ]
-    },
-    {
-      "name": "github.md",
-      "title": "GitHub",
-      "href": "https://github.com",
-      "content": "Opens in a new tab."
-    }
-  ]
-}
+```markdown
+---
+title: Hello World
+date: Aug 31 2026
+tags: [intro, meta]
+---
+# Hello World
+
+正文...
 ```
 
 规则：
 
-- `type` 可省略。有 `children` 视为目录，否则视为文件。
-- 文件的 `size` 可省略，默认取 `content` 的字节数。
+- 文件夹成为目录节点，`.md` 文件成为文件节点。
+- front-matter 里可写 `title`、`date`、`tags`、`modified`、`summary`、`href`。
 - 有 `href` 的文件打开时转向新标签页，不显示正文。
 - 文件名在同一目录内必须唯一。
-- `modified` 可传字符串、时间戳或 `Date`。
+- 文件 `size` 由构建时读取 `.md` 文件的字节数得到；目录 `modified` 取其下最新 `.md` 的修改时间。
+- `site.config.json` 只保留 `meta`。
+
+## 懒加载
+
+索引 `site.content.js` 只含树结构与元数据，不含正文。打开某篇时才由 `app.js` 通过 `fetch(node.path)` 拉取该 `.md`，再交给 `tui-doc-viewer` 渲染（它会在渲染前剥离 front-matter）。
 
 
 ## 主页 ASCII 艺术图
@@ -151,6 +143,25 @@ cp 新图.jpg assets/home-ascii.jpg   # 右侧图片框
 cp 新图.jpg assets/home-smile.jpg   # :) 方块
 node build.js
 ```
+
+## 弹窗组件（tui-dialog）
+
+泛用弹窗，Dracula 配色，无拖动/缩放，右上角 `×` 或 `Esc` 关闭。打开时用 `html2canvas-pro` 快照整页并转成 ASCII，再用从弹窗中心向外扩散的涟漪把整页（除弹窗）覆盖成 ASCII；关闭时弹窗与 ASCII 覆盖一同淡出。
+
+```html
+<script type="module" src="./tui-dialog.js"></script>
+<tui-dialog></tui-dialog>
+```
+
+```js
+const dlg = document.querySelector('tui-dialog');
+dlg.open({ title: 'About', content: '<p>Content in HTML</p>' });
+dlg.close();
+```
+
+- `open(data)`：`data` 为 `{ title, content }`，`content` 为 HTML，注入正文。
+- `close()`：关闭；关闭时派发 `close` 事件。
+- 主页「个人简介」按钮已接到此组件作示例。
 
 ## 使用组件
 
@@ -190,7 +201,7 @@ fm.setFileSystem(fileSystem);
 
 事件：
 
-- `open`：打开一个文件时触发，`detail` 包含 `{ path, node }`。`node` 上带有配置文件里的 `title`、`content`、`href` 等字段。
+- `open`：打开一个文件时触发，`detail` 包含 `{ path, node }`。`node` 上带有索引里的 `title`、`date`、`path`、`href` 等字段，不含正文；正文由 `app.js` 按 `path` 拉取。
 
 ## 键盘操作
 

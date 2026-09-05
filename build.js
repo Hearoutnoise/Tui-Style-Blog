@@ -26,6 +26,7 @@ const { imageToAscii } = require('./tools/image-to-ascii.js');
 const ROOT = __dirname;
 const SRC = path.join(ROOT, 'site.config.json');
 const OUT = path.join(ROOT, 'site.content.js');
+const CONTENT_DIR = path.join(ROOT, 'content');
 const HOME_IMG = path.join(ROOT, 'assets', 'home-ascii.jpg');
 const SMILE_IMG = path.join(ROOT, 'assets', 'home-smile.jpg');
 const HOME_OUT = path.join(ROOT, 'site.home.js');
@@ -40,62 +41,89 @@ function readConfig() {
 }
 
 /** Sanitize the label used in error messages. */
-function label(name) {
-  return name && name.trim() ? name : '?';
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/** Format a Date like "Aug 31 13:44" for display in the file manager. */
+function formatModified(d) {
+  const mm = MONTHS[d.getMonth()];
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  return `${mm} ${dd} ${hh}:${mi}`;
 }
 
-function transformChildren(parentName, arr) {
-  if (!Array.isArray(arr)) {
-    throw new Error(`"${label(parentName)}".children must be an array`);
-  }
-  const seen = new Set();
-  const out = [];
-  for (const raw of arr) {
-    if (!raw || typeof raw.name !== 'string' || !raw.name.trim()) {
-      throw new Error(`Every node under "${label(parentName)}" needs a non-empty "name"`);
+/** Parse the YAML-ish front-matter block at the top of a markdown file. */
+function parseFrontmatter(text) {
+  if (text.slice(0, 3) !== '---') return { meta: {}, body: text };
+  const m = /\n---\s*\n/.exec(text);
+  if (!m) return { meta: {}, body: text };
+  const fmText = text.slice(3, m.index);
+  const body = text.slice(m.index + m[0].length);
+  const meta = {};
+  for (const line of fmText.split('\n')) {
+    const kv = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (!kv) continue;
+    const key = kv[1];
+    let val = kv[2].trim();
+    if (/^\[.*\]$/.test(val)) {
+      val = val.slice(1, -1).split(',').map((s) => s.trim().replace(/^['"]|['"]$/g, '')).filter(Boolean);
+    } else {
+      val = val.replace(/^['"]|['"]$/g, '');
     }
-    if (seen.has(raw.name)) {
-      throw new Error(`Duplicate node name "${raw.name}" under "${label(parentName)}"`);
-    }
-    seen.add(raw.name);
-    out.push(transformNode(raw, parentName));
+    meta[key] = val;
   }
-  return out;
+  return { meta, body };
 }
 
-function transformNode(raw, parentName) {
-  const type = raw.type || (Array.isArray(raw.children) ? 'dir' : 'file');
-
-  if (type === 'dir') {
-    return {
-      name: raw.name,
-      type: 'dir',
-      modified: raw.modified || '',
-      children: transformChildren(raw.name, raw.children || []),
-    };
+/** Latest mtime as a display string for a directory. */
+function dirModified(absDir) {
+  let max = 0;
+  for (const ent of fs.readdirSync(absDir, { withFileTypes: true })) {
+    const abs = path.join(absDir, ent.name);
+    if (ent.isDirectory()) {
+      const sub = dirModified(abs);
+      if (sub > max) max = sub;
+    } else if (/\.md$/i.test(ent.name)) {
+      const st = fs.statSync(abs);
+      if (st.mtimeMs > max) max = st.mtimeMs;
+    }
   }
+  return max ? formatModified(new Date(max)) : '';
+}
 
-  const content = raw.content || '';
-  const size = raw.size != null ? raw.size : Buffer.byteLength(content, 'utf8');
-
-  const node = {
-    name: raw.name,
-    type: 'file',
-    size,
-    modified: raw.modified || '',
-  };
-
-  for (const key of ['title', 'date', 'href', 'summary']) {
-    if (raw[key] != null && raw[key] !== '') node[key] = raw[key];
+/** Scan a content directory and return the file-system tree for the UI. */
+function scanContentDir(absDir, relDir) {
+  const children = [];
+  const entries = fs.readdirSync(absDir, { withFileTypes: true });
+  entries.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  for (const ent of entries) {
+    const abs = path.join(absDir, ent.name);
+    const rel = relDir ? relDir + '/' + ent.name : ent.name;
+    if (ent.isDirectory()) {
+      children.push({
+        name: ent.name,
+        type: 'dir',
+        modified: dirModified(abs),
+        children: scanContentDir(abs, rel),
+      });
+    } else if (/\.md$/i.test(ent.name)) {
+      const raw = fs.readFileSync(abs, 'utf8');
+      const { meta } = parseFrontmatter(raw);
+      const node = {
+        name: ent.name,
+        type: 'file',
+        size: fs.statSync(abs).size,
+        modified: meta.modified || '',
+        path: 'content/' + rel,
+      };
+      for (const key of ['title', 'date', 'href', 'summary']) {
+        if (meta[key]) node[key] = meta[key];
+      }
+      if (Array.isArray(meta.tags) && meta.tags.length) node.tags = meta.tags;
+      children.push(node);
+    }
   }
-  if (Array.isArray(raw.tags) && raw.tags.length) node.tags = raw.tags;
-  if (content) node.content = content;
-
-  if (raw.size == null && size === 0 && !content) {
-    console.warn(`  warn: "${raw.name}" has no size and no content`);
-  }
-
-  return node;
+  return children;
 }
 
 function countNodes(node) {
@@ -157,12 +185,13 @@ function build() {
   const fileSystem = {
     name: rootName,
     type: 'dir',
-    children: transformChildren(rootName, cfg.tree || []),
+    modified: '',
+    children: fs.existsSync(CONTENT_DIR) ? scanContentDir(CONTENT_DIR, '') : [],
   };
 
   const count = countNodes(fileSystem);
   const banner =
-    '/* AUTO-GENERATED by build.js from site.config.json. Do not edit by hand. */';
+    '/* AUTO-GENERATED by build.js from the content/ directory. Do not edit by hand. */';
   const output =
     banner +
     '\n\nexport const siteMeta = ' + JSON.stringify(meta, null, 2) + ';\n\n' +
@@ -186,7 +215,14 @@ function watch() {
   fs.watchFile(SRC, { interval: 300 }, rebuild);
   fs.watchFile(HOME_IMG, { interval: 300 }, rebuild);
   fs.watchFile(SMILE_IMG, { interval: 300 }, rebuild);
-  console.log('watching ' + path.basename(SRC) + ', ' + path.basename(HOME_IMG) + ' and ' + path.basename(SMILE_IMG) + '  (Ctrl+C to stop)');
+  if (fs.existsSync(CONTENT_DIR)) {
+    try {
+      fs.watch(CONTENT_DIR, { recursive: true }, rebuild);
+    } catch (e) {
+      fs.watchFile(CONTENT_DIR, { interval: 300 }, rebuild);
+    }
+  }
+  console.log('watching ' + path.basename(SRC) + ', ' + path.basename(CONTENT_DIR) + ', ' + path.basename(HOME_IMG) + ' and ' + path.basename(SMILE_IMG) + '  (Ctrl+C to stop)');
 }
 
 const watchMode = process.argv.includes('--watch');

@@ -235,6 +235,9 @@ class TuiHome extends HTMLElement {
     this._openFmBtn.addEventListener('click', () => {
       this.dispatchEvent(new CustomEvent('open-fm', { bubbles: true, composed: true }));
     });
+    this._bioBtn.addEventListener('click', () => {
+      this.dispatchEvent(new CustomEvent('open-about', { bubbles: true, composed: true }));
+    });
 
     if ('ResizeObserver' in globalThis) {
       const fitAll = () => {
