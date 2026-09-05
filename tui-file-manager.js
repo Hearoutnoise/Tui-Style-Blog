@@ -115,10 +115,18 @@ const CSS = /* css */ `
   border-top: 2px solid var(--dt-purple);
   flex: none;
 }
-.titlebar__dot { color: var(--dt-green); font-size: 11px; line-height: 1; }
-.titlebar__brand { color: var(--dt-purple); letter-spacing: .12em; font-weight: 700; }
-.titlebar__sep { color: var(--dt-comment); }
+.titlebar__brand-art {
+  margin: 0 0 0 -6px;
+  color: var(--dt-purple);
+  font-size: 6.67px;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: pre;
+  font-family: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code',
+    'Cascadia Mono', Menlo, Consolas, monospace;
+}
 .titlebar__path { color: var(--dt-cyan); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.titlebar__sep { color: var(--dt-comment); }
 .titlebar__crumb { color: var(--dt-cyan); cursor: pointer; }
 .titlebar__crumb:hover { text-decoration: underline; color: var(--dt-pink); }
 .titlebar__right { margin-left: auto; color: var(--dt-comment); font-size: 11px; white-space: nowrap; }
@@ -134,16 +142,18 @@ const CSS = /* css */ `
   align-items: center;
   gap: 6px;
   height: 28px;
-  padding: 0 10px;
+  padding: 0 8px;
   font-size: 11px;
   letter-spacing: .16em;
   color: var(--dt-comment);
   border-bottom: 1px solid var(--tui-line);
   flex: none;
 }
-.pane__head .frame { color: var(--dt-purple); white-space: pre; }
-.pane__head .title { color: var(--dt-comment); }
-.pane__head .hline { flex: 1; height: 1px; background: var(--tui-line); }
+.pane__head .title {
+  color: var(--dt-purple);
+  background: var(--dt-current);
+  padding: 2px 6px;
+}
 
 .pane__scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
 
@@ -214,13 +224,12 @@ const CSS = /* css */ `
   align-items: center;
   gap: 12px;
   height: 28px;
-  padding: 0 14px;
+  padding: 0 8px;
   font-size: 11px;
   color: var(--dt-comment);
   border-top: 1px solid var(--tui-line);
   flex: none;
 }
-.statusbar::before { content: '└──'; color: var(--dt-purple); white-space: pre; }
 .statusbar__left { color: var(--dt-comment); overflow: hidden; white-space: nowrap; }
 .statusbar__hint { margin-left: auto; color: var(--dt-comment); white-space: nowrap; }
 
@@ -237,9 +246,9 @@ const TEMPLATE = /* html */ `
 <div class="stage">
   <div class="app">
   <header class="titlebar">
-    <span class="titlebar__dot">●</span>
-    <span class="titlebar__brand">TUI-FS</span>
-    <span class="titlebar__sep">/</span>
+    <pre class="titlebar__brand-art" aria-hidden="true">░▀█▀░█░█░▀█▀
+░░█░░█░█░░█░
+░░▀░░▀▀▀░▀▀▀</pre>
     <span class="titlebar__path" data-path></span>
     <span class="titlebar__right" data-count></span>
   </header>
@@ -247,9 +256,7 @@ const TEMPLATE = /* html */ `
   <section class="work">
     <aside class="pane pane--tree">
       <div class="pane__head">
-        <span class="frame">┌─</span>
         <span class="title">DIRECTORIES</span>
-        <span class="hline"></span>
       </div>
       <div class="pane__scroll tree" data-tree></div>
     </aside>
@@ -258,9 +265,7 @@ const TEMPLATE = /* html */ `
 
     <main class="pane pane--list">
       <div class="pane__head">
-        <span class="frame">┌─</span>
         <span class="title">FILES</span>
-        <span class="hline"></span>
       </div>
       <div class="cols">
         <div class="cols__name">NAME</div>
