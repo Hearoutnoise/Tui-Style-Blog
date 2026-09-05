@@ -21,6 +21,29 @@
 
 import { scanElement } from './scan-effect.js';
 
+/* Lazily load markdown-it (UMD, exposes `window.markdownit`). Local vendor
+ * first with a CDN fallback, matching the html2canvas-pro loading pattern. */
+let mdPromise = null;
+function loadMarkdownIt() {
+  if (mdPromise) return mdPromise;
+  mdPromise = new Promise((resolve) => {
+    if (window.markdownit) { resolve(window.markdownit); return; }
+    const inject = (src, fail) => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.onload = () => resolve(window.markdownit || null);
+      s.onerror = fail;
+      document.head.appendChild(s);
+    };
+    inject('./vendor/markdown-it.min.js', () =>
+      inject('https://cdn.jsdelivr.net/npm/markdown-it@14.1.0/dist/markdown-it.min.js', () =>
+        resolve(null)));
+  });
+  return mdPromise;
+}
+// Preload markdown-it in the background so documents render instantly on open.
+loadMarkdownIt();
+
 /* --------------------------------------------------------------------------
  * Dracula palette tokens. All values come from DRACULA.md.
  * ------------------------------------------------------------------------ */
@@ -208,42 +231,22 @@ function esc(text) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
-function inline(src) {
-  let s = src;
-  s = s.replace(/`([^`]+)`/g, (_, c) => '<code>' + c + '</code>');
-  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
-  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener">$1</a>');
-  return s;
-}
-function renderMarkdown(src) {
+function stripFrontMatter(src) {
   let s = String(src).replace(/\r\n/g, '\n');
-  // Strip a leading YAML front-matter block: it is metadata, not body content.
   if (s.slice(0, 3) === '---') {
     const fm = /\n---\s*\n/.exec(s);
     if (fm) s = s.slice(fm.index + fm[0].length);
   }
-  const blocks = s.split(/\n{2,}/);
-  let html = '';
-  for (const block of blocks) {
-    if (!block.trim()) continue;
-    const lines = block.split('\n');
-    const first = lines[0].trim();
-    if (/^###\s+/.test(first)) { html += '<h3>' + inline(esc(first.replace(/^###\s+/, ''))) + '</h3>'; continue; }
-    if (/^##\s+/.test(first)) { html += '<h2>' + inline(esc(first.replace(/^##\s+/, ''))) + '</h2>'; continue; }
-    if (/^#\s+/.test(first)) { html += '<h1>' + inline(esc(first.replace(/^#\s+/, ''))) + '</h1>'; continue; }
-    if (/^[-*]\s+/.test(first)) {
-      const items = lines
-        .filter((l) => /^[-*]\s+/.test(l))
-        .map((l) => '<li>' + inline(esc(l.replace(/^[-*]\s+/, ''))) + '</li>')
-        .join('');
-      html += '<ul>' + items + '</ul>';
-      continue;
-    }
-    html += '<p>' + lines.map((l) => inline(esc(l))).join('<br>') + '</p>';
-  }
-  return html;
+  return s;
+}
+
+function renderMarkdownIt(markdownit, src) {
+  const md = markdownit({
+    html: false,    // raw HTML in markdown is escaped, not executed
+    linkify: true,  // bare URLs become links
+    breaks: true,   // a single newline becomes <br>, like the previous parser
+  });
+  return md.render(stripFrontMatter(src));
 }
 
 class TuiDocViewer extends HTMLElement {
@@ -286,10 +289,9 @@ class TuiDocViewer extends HTMLElement {
    * Populate and display a document.
    * @param {object} node file node with title/tags/date/modified/name/content
    */
-  open(node) {
+  async open(node) {
     this._titleEl.textContent = node.title || node.name || '';
     this._renderMeta(node);
-    this._bodyEl.innerHTML = renderMarkdown(node.content || '*empty*');
     this.hidden = false;
     const doc = this._docEl;
     doc.classList.remove('is-enter');
@@ -297,6 +299,16 @@ class TuiDocViewer extends HTMLElement {
     doc.classList.add('is-enter');
     this._closeEl.focus();
     this._bodyEl.scrollTop = 0;
+
+    // markdown-it is preloaded on page load, so this resolves immediately.
+    try {
+      const markdownit = await loadMarkdownIt();
+      this._bodyEl.innerHTML = markdownit
+        ? renderMarkdownIt(markdownit, node.content || '')
+        : '<p>Markdown renderer unavailable.</p>';
+    } catch (e) {
+      this._bodyEl.innerHTML = '<p>Markdown renderer unavailable.</p>';
+    }
   }
 
   /**

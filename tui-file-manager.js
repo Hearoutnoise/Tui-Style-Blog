@@ -168,6 +168,8 @@ const CSS = /* css */ `
   cursor: pointer;
   white-space: pre;
   border-left: 2px solid transparent;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .tree__node:hover { background: rgba(68, 71, 90, .45); }
 .tree__node.is-active { background: var(--dt-selection); border-left-color: var(--dt-purple); color: var(--dt-fg); }
@@ -673,8 +675,7 @@ class TuiFileManager extends HTMLElement {
       this.render();
       this._fadeIn();
     };
-    if (this.scanEnabled) this._playScan(apply);
-    else apply();
+    apply();
   }
 
   _playScan(callback) {
@@ -755,7 +756,7 @@ class TuiFileManager extends HTMLElement {
       conn.textContent = row.connector;
 
       const label = document.createElement('span');
-      label.style.color = row.node.type === 'dir' ? 'var(--dt-cyan)' : 'var(--dt-fg)';
+      label.style.color = row.node.type === 'dir' ? 'var(--dt-purple)' : 'var(--dt-fg)';
       label.textContent = row.node.type === 'dir' ? row.node.name + '/' : row.node.name;
 
       const isDir = row.node.type === 'dir';
