@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "TUI-FS",
-    "description": "A self-hosted blog rendered as a TUI file manager.",
+    "title": "TUI BLOG",
+    "description": "A personal blog with a TUI style.",
     "root": "~"
   }
 }
