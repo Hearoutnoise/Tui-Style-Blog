@@ -1,107 +1,77 @@
-# TUI File Manager
+# TUI BLOG
 
-一个解耦的、tui 风格的目录系统前端组件。它渲染一个类似终端文本界面 (TUI) 的文件管理器，可作为静态站点展示文章。
+一个 **TUI（终端用户界面）风格**的个人博客。它把文章目录渲染成一个可导航、类似于终端文件管理器的界面，由一套**无框架、解耦的 Web Components**组成。
 
-所有配色取自 `DRACULA.md`，全部边框使用直角 (border-radius 为 0)。
+所有配色取自 `DRACULA.md`（德古拉主题）。全部边框使用直角（`border-radius: 0`）。
 
-## 特性
+## 核心特性
 
-- 目录树，使用直角线画字符 (`├─`, `└─`, `│`) 连接层级。
-- 双栏文件列表：名称、大小、修改时间。
-- 支持鼠标与键盘导航。
-- 组件通过 Shadow DOM 自带样式，无构建、无依赖、无框架耦合。
-- 内容由 JSON 配置文件驱动，样式固定不变。
-- 目录切换时播放扫描消解过渡效果。
-- 站点主页为默认视图，由独立的 `<tui-home>` 组件渲染。
-- 打开文件节点时触发扫描过渡，然后切换到独立的文章阅读界面；为外部链接则打开新标签页。
+- 主页、文件管理、文章阅读、弹窗、背景均为**独立的 Web Component**（Shadow DOM 自含样式），无构建、无依赖、无框架耦合。
+- 左侧**目录树**用直角线字符（`├─` `└─` `│`）连接层级；右侧**文件列表**显示名称 / 大小 / 修改时间。
+- **鼠标 + 键盘**均可导航：方向键、Enter、Backspace、Esc。
+- 文章以 **Markdown** 存放于 `content/`，子文件夹 = 目录，`.md` = 文件，**结构即文件系统树**。
+- **懒加载**：索引只含树结构与元数据，正文在打开时才 `fetch` 并按需渲染。
+- **任意图片 → ASCII 艺术**：构建期自动把源图转成 ASCII，用于主页艺术字与图片框。
+- **扫描溶解过渡**：视图切换 / 打开文章时播放 ASCII 扫描消解效果。
+- **泛用弹窗**：打开时把整页转成 ASCII 并涟漪扩散。
 
-## 文件
+## 技术亮点
 
-| 文件 | 说明 |
-| ---- | ---- |
-| `tui-home.js` | 主页组件源码 (Web Component)，独立解耦 |
-| `tui-bg.js` | 共享页面背景组件 (Web Component)，德古拉纯色背景 + 四条分段虚线，可独立复用 |
-| `tui-file-manager.js` | 文件管理组件源码 (Web Component)，样式固定 |
-| `tui-doc-viewer.js` | 文章阅读组件源码 (Web Component)，独立解耦 |
-| `scan-effect.js` | 可复用的 ASCII 扫描过渡模块，供文件管理与阅读组件共用 |
-| `tui-dialog.js` | 泛用弹窗组件 (Web Component)，打开时把整页转成 ASCII 并涟漪扩散，右上角 `×` 或 `Esc` 关闭 |
-| `content/` | 文章 Markdown 目录，结构即文件系统树，正文带 front-matter 元数据 |
-| `site.config.json` | 站点 `meta`（标题、root 等），树结构改由 `content/` 决定 |
-| `build.js` | 构建脚本，扫描 `content/` 生成 `site.content.js` 索引，并把 `assets/home-ascii.jpg` 与 `assets/home-smile.jpg` 转成主页 ASCII 艺术字 |
-| `site.content.js` | 构建生成的索引模块，只含树结构与元数据，不含正文 |
-| `assets/home-ascii.jpg` | 主页右侧 ASCII 艺术图源图，替换它并重新构建即可换图 |
-| `assets/home-smile.jpg` | 主页 `:)` ASCII 艺术字源图，替换它并重新构建即可换图 |
-| `tools/image-to-ascii.js` | 把图像转成 ASCII 的纯 JS 模块，供 `build.js` 调用 |
-| `site.home.js` | 构建生成的模块，导出主页 ASCII 数据 (`art` / `cols` / `rows`) |
-| `app.js` | 站点装载器，喂数据并协调文件管理到文章阅读的过渡 |
-| `index.html` | 页面骨架，含始终可见的站点页眉与页脚 |
-| `vendor/html2canvas-pro.esm.js` | 扫描效果用的像素转 canvas 库，本地静态资源 |
-| `preview.png` | 文件列表渲染效果 |
-| `reader.png` | 文章阅读界面渲染效果 |
-| `scan-mid.png` | 扫描过渡效果中途截图 |
-| `DRACULA.md` | 配色板 (来源参考) |
+- **图片 → ASCII 管线**：构建期用 jimp 读图，降采样成字符网格，按亮度映射字符密度（越亮越密），把任意图片转成可主题化的 ASCII 艺术。
+- **动态 Markdown 内容引擎**：`build.js` 扫描 `content/` 生成索引；正文按需用 `markdown-it` 渲染，含 YAML front-matter 剥离。
+- **按需 / 懒加载**：正文与重依赖（html2canvas-pro、markdown-it）在需要时才加载，带 CDN 兜底。
+- **模块化组件**：文件管理、阅读、弹窗、背景、扫描特效均为独立可复用的组件或模块，组合时无框架依赖。
 
-## 快速更新内容
+## 快速开始
 
-在 `content/` 加一个 Markdown 文件（或子文件夹），重新构建，刷新页面。
+安装构建依赖并生成内容索引与 ASCII 数据：
 
 ```bash
+npm install
 node build.js
 ```
 
-`--watch` 会监听 `content/`、配置与图片变化并自动重建。
+`--watch` 监听 `content/`、配置与源图变化并自动重建：
 
 ```bash
 node build.js --watch
 ```
 
-## 扫描切换效果
+用任意静态服务器打开 `index.html`：
 
-触发时机是目录切换。例如双击某个目录、按 Enter、点面包屑、按退格，会先播放一次扫描过渡来消解旧视图，然后显示新目录。
-
-- 按方向把旧视图逐块转换成 ASCII 字符，没有可见的扫描线
-- 转换出来的 ASCII 只短暂保留，随后立刻消失
-- 扫描完成后显示新目录，带一次淡入
-
-默认从左到右。可配置方向或关闭。
-
-```html
-<!-- 扫描方向从右到左 -->
-<tui-file-manager scan-direction="rtl"></tui-file-manager>
-
-<!-- 关闭扫描效果 -->
-<tui-file-manager no-scan></tui-file-manager>
+```bash
+python3 -m http.server 8123
+# 访问 http://localhost:8123/
 ```
 
-也可通过属性控制：
+> 运行时是纯浏览器端，无需服务端；`node` 只在构建期使用。
 
-```js
-const fm = document.querySelector('tui-file-manager');
-fm.scanEnabled = false;     // 关闭
-fm.scanDirection = 'ttb';   // 上到下，可选 ltr rtl ttb btt
-fm.scanDuration = 520;      // 扫描时长，毫秒
-fm.scanFade = 160;          // ASCII 停留时长，毫秒
-fm.dblclickMs = 320;        // 双击判定窗口，毫秒
-```
+## 目录结构
 
-效果依赖 `vendor/html2canvas-pro.esm.js`。组件懒加载它，找不到时回退到 CDN，再失败则直接跳转。对 `prefers-reduced-motion` 用户自动跳过。
+| 文件 / 目录 | 说明 |
+| --- | --- |
+| `index.html` | 页面骨架，含页眉（站点导航）与页脚 |
+| `app.js` | 装载器，喂数据并协调主页 → 文件管理 → 文章阅读的切换 |
+| `tui-home.js` | 主页组件 |
+| `tui-file-manager.js` | 文件管理组件（目录树 + 文件列表） |
+| `tui-doc-viewer.js` | 文章阅读组件 |
+| `tui-dialog.js` | 泛用弹窗组件 |
+| `tui-bg.js` | 共享页面背景组件 |
+| `scan-effect.js` | 可复用的 ASCII 扫描过渡模块 |
+| `content/` | 文章 Markdown 目录，结构即文件系统树 |
+| `site.config.json` | 站点 `meta`（标题、root 等） |
+| `build.js` | 构建脚本：扫描 `content/` 生成索引，并把源图转成 ASCII |
+| `site.content.js` | 构建生成的索引模块（只含树结构与元数据） |
+| `site.home.js` | 构建生成的主页 ASCII 数据 |
+| `tools/image-to-ascii.js` | 图像 → ASCII 的纯 JS 转换模块 |
+| `assets/home-ascii.jpg` | 主页右侧 ASCII 图源图 |
+| `assets/home-smile.jpg` | 主页 `:)` ASCII 艺术字源图 |
+| `vendor/` | 本地静态库（html2canvas-pro、markdown-it） |
+| `DRACULA.md` | 德古拉配色来源 |
 
-## 页面背景组件
+## 内容管理
 
-德古拉纯色背景 + 四条分段虚线被抽成了独立的 `<tui-bg>` 组件。它是一块纯装饰层，绘制中央矩形（舞台盒）四条边上的虚线，并把虚线延伸至页面边缘。它不拦截任何点击（`pointer-events: none`）。
-
-背景与视图解耦后，扫描过渡在溶解视图时不会再把虚线盖掉：扫描层是透明的，溶解过程中它显示的是视图背后真正的背景（含虚线），而不是覆盖一层纯色。因此播放动画时若正好落在虚线上，虚线也不会消失。
-
-它是主页、文件管理与文章阅读视图共享的页面背景。主页的中央内容、文件管理面板、阅读正文都叠放在这个背景之上，并与虚线框对齐：文件管理器铺满四条虚线围成的中心矩形，阅读界面左右两边对齐两条垂直虚线，虚线向四周延伸。
-
-```html
-<script type="module" src="./tui-bg.js"></script>
-<tui-bg></tui-bg>
-```
-
-## 内容目录（content/）
-
-文章正文以 Markdown 文件放在 `content/` 里。子文件夹=目录，`.md` 文件=文件，结构即文件系统树。每个 `.md` 可用 `---` 包围一段 YAML 前置元数据（front-matter）。
+在 `content/` 里放 `.md`（= 文件）或子文件夹（= 目录），结构即树。每个 `.md` 可用 `---` 包一段 YAML 元数据：
 
 ```markdown
 ---
@@ -109,70 +79,20 @@ title: Hello World
 date: Aug 31 2026
 tags: [intro, meta]
 ---
-# Hello World
-
 正文...
 ```
 
-规则：
-
-- 文件夹成为目录节点，`.md` 文件成为文件节点。
-- front-matter 里可写 `title`、`date`、`tags`、`modified`、`summary`、`href`。
-- 有 `href` 的文件打开时转向新标签页，不显示正文。
+- front-matter 字段：`title`、`date`、`modified`、`tags`、`summary`、`href`。
+- 有 `href` 的文件打开时转新标签页，不显示正文。
+- 文件 `size` 为构建时读取的字节数；目录 `modified` 取其下最新 `.md` 的修改时间。
 - 文件名在同一目录内必须唯一。
-- 文件 `size` 由构建时读取 `.md` 文件的字节数得到；目录 `modified` 取其下最新 `.md` 的修改时间。
-- `site.config.json` 只保留 `meta`。
-
-## 懒加载
-
-索引 `site.content.js` 只含树结构与元数据，不含正文。打开某篇时才由 `app.js` 通过 `fetch(node.path)` 拉取该 `.md`，再交给 `tui-doc-viewer` 渲染（它会在渲染前剥离 front-matter）。
-
-
-## 主页 ASCII 艺术图
-
-主页有两块 ASCII 艺术，都由源图在构建时自动转换而来：右侧的图片框读 `assets/home-ascii.jpg`，`:)` 方块读 `assets/home-smile.jpg`。约定：把图像复制到对应路径，然后执行 `node build.js`。首次构建需要 `npm install` 安装 jimp。
-
-转换器 `tools/image-to-ascii.js` 用 jimp 读取图像，降采样成一个字符网格，把亮度映射为字符密度（越亮字符越密）。生成的字符统一用德古拉粉色（与 `:)` 相同）渲染，因此只有密度携带图像信息。两块结果分别写入 `site.home.js` 的 `homeAscii` 与 `homeSmile`，由 `app.js` 通过 `home.setAscii(...)`、`home.setSmile(...)` 喂给 `<tui-home>`。
-
-`<tui-home>` 会用 `ResizeObserver` 把字符网格按包含方式（contain）缩放，居中填入对应方块，不裁切、不变形。
-
-更换源图只需要替换对应路径再构建一次。
-
-```bash
-cp 新图.jpg assets/home-ascii.jpg   # 右侧图片框
-cp 新图.jpg assets/home-smile.jpg   # :) 方块
-node build.js
-```
-
-## 弹窗组件（tui-dialog）
-
-泛用弹窗，Dracula 配色，无拖动/缩放，右上角 `×` 或 `Esc` 关闭。打开时用 `html2canvas-pro` 快照整页并转成 ASCII，再用从弹窗中心向外扩散的涟漪把整页（除弹窗）覆盖成 ASCII；关闭时弹窗与 ASCII 覆盖一同淡出。
-
-```html
-<script type="module" src="./tui-dialog.js"></script>
-<tui-dialog></tui-dialog>
-```
-
-```js
-const dlg = document.querySelector('tui-dialog');
-dlg.open({ title: 'About', content: '<p>Content in HTML</p>' });
-dlg.close();
-```
-
-- `open(data)`：`data` 为 `{ title, content }`，`content` 为 HTML，注入正文。
-- `close()`：关闭；关闭时派发 `close` 事件。
-- 主页「个人简介」按钮已接到此组件作示例。
 
 ## 使用组件
-
-通过 ES Module 引入。
 
 ```html
 <script type="module" src="./tui-file-manager.js"></script>
 <tui-file-manager></tui-file-manager>
 ```
-
-要使用配置数据，调用 `setFileSystem`。
 
 ```js
 import { fileSystem } from './site.content.js';
@@ -180,109 +100,64 @@ const fm = document.querySelector('tui-file-manager');
 fm.setFileSystem(fileSystem);
 ```
 
-## API
+### 文件管理 API
 
 | 方法 | 说明 |
-| ---- | ---- |
+| --- | --- |
 | `setFileSystem(fs)` | 替换文件系统并重置到根目录 |
 | `cd(path)` | 导航到指定路径数组 |
-| `setExpanded(path)` | 在目录树中展开某个目录 |
+| `setExpanded(path)` | 展开某个目录 |
 | `refresh()` | 重新渲染 |
-| `playScan(cb)` | 播放一次扫描过渡，完成后回调，用于切换到其他界面 |
-| `currentPath` | 当前路径的规范字符串，如 `~/Posts` |
+| `playScan(cb)` | 播放一次扫描过渡，完成后回调 |
 
-属性：
+属性：`scanEnabled`（默认 `true`）、`scanDirection`（`ltr` / `rtl` / `ttb` / `btt`）、`scanDuration`（默认 `520`）、`scanFade`（默认 `160`）、`dblclickMs`（默认 `320`）。
 
-- `scanEnabled`：是否启用扫描过渡，默认 `true`
-- `scanDirection`：`ltr` `rtl` `ttb` `btt`，默认 `ltr`
-- `scanDuration`：扫描时长毫秒，默认 `520`
-- `scanFade`：ASCII 停留时长毫秒，默认 `160`
-- `dblclickMs`：双击判定窗口毫秒，默认 `320`
+事件：`open`（打开文件时触发，`detail` 含 `{ path, node }`；`node` 含索引字段、不含正文）。
 
-事件：
-
-- `open`：打开一个文件时触发，`detail` 包含 `{ path, node }`。`node` 上带有索引里的 `title`、`date`、`path`、`href` 等字段，不含正文；正文由 `app.js` 按 `path` 拉取。
-
-## 键盘操作
+### 键盘
 
 | 按键 | 行为 |
-| ---- | ---- |
+| --- | --- |
 | `↑` / `↓` | 移动选中项 |
-| `Home` / `End` | 跳到文件列表首尾 |
-| `Enter` / `→` | 进入选中目录 (文件则触发 `open` 事件) |
-| `Backspace` / `←` | 返回上一级目录 |
-| `Esc` | 关闭文章阅读界面并返回文件系统 |
+| `Home` / `End` | 跳到列表首尾 |
+| `Enter` / `→` | 进入目录（文件则触发 `open`） |
+| `Backspace` / `←` | 返回上级 |
+| `Esc` | 关闭文章阅读界面并返回文件管理器 |
 
-目录切换会触发扫描过渡效果。
+> 侧栏目录树**双击**节点才进入目录（单击只展开 / 收起）；文件列表双击同一行等效于 Enter。
 
-在文件列表里快速双击同一行，等效于按 Enter。双击判定是组件自己实现的，判定窗口为 `dblclickMs`。这种实现不依赖浏览器的原生双击检测，因此更可靠。
+## 界面与交互
 
-左侧目录树只显示文件夹，文件不出现在树里。单击节点只展开或收起，不会导航。要打开某个目录，请双击该节点，或先选中再按 Enter。
+### 主页
+- 四条虚线向四周延伸，与文件管理器边缘对齐。
+- 左上 `MY BLOG` 为 figlet 生成的 ASCII 艺术字；右侧为 `:)` 艺术字（粉色边框）与一处 ASCII 艺术图框。
+- 黄金分割处有垂直排列的 `HELLO WORLD`（figlet Pegga 风格）艺术字。
+- `MY BLOG` 下方为终端日志样式警句：`[时间] INFO "名言" — 作者`，取自 Alan Turing、Edsger W. Dijkstra、Linus Torvalds。
+- 底部居中 `个人简介`（打开弹窗）与 `打开文件管理`（进入文件管理器）两个按钮。
 
-## 主页
+### 文章阅读界面
+- 打开文件时播放扫描过渡，再把界面交给 `<tui-doc-viewer>`。
+- 页眉：紫色标题 + 小字号的 tags / date / modified / name；右上角虚线框 `×` 返回。
+- 正文左右对齐两条垂直虚线；关闭时用同一套扫描效果溶解自身。
 
-站点默认进入主页。主页由独立的 `<tui-home>` 组件渲染，采用德古拉配色：
+### 扫描过渡
+- 触发时机：**视图切换**（主页 ↔ 文件管理）、打开文件、关闭文章。目录切换**不**播放。
+- 方向可配置（`ltr` / `rtl` / `ttb` / `btt`），默认 `ltr`；对 `prefers-reduced-motion` 用户自动跳过。
 
-- 四条分割虚线，恰好是文件管理器四个边缘的延伸。
-- 主内容位于中央矩形，围绕黄金分割排版。
-- 左上角的 `MY BLOG` 使用 figlet 生成的 ASCII 艺术字（ANSI Shadow 样式），右侧边缘接近 `:)`。
-- `:)` 是位于中心矩形右侧黄金分割处的 `:)` 外形 ASCII 艺术字（由 `assets/home-smile.jpg` 构建生成），带粉色边框。
-- `:)` 右侧是一个 ASCII 艺术框，保留矩形边框与半透明背景，里面由构建时从 `assets/home-ascii.jpg` 生成的 ASCII 艺术图填充，颜色与 `:)` 相同。
-- 黄金分割线上有垂直排列的 `HELLO WORLD`（figlet Pagga 风格 ASCII 艺术字），颜色与 `:)` 相同。
-- `MY BLOG` 下方是警句正文，以终端日志（log）样式呈现：每行 `[时间] INFO "名言"  — 作者`，无空行，沿用原有灰色。三条名言分别取自 Alan Turing、Edsger W. Dijkstra、Linus Torvalds，时间用真实日期（无具体时刻则记零点）。
-- 底部操作区居中放置 `个人简介` 与 `打开文件管理` 两个按钮，无箭头、无方块、无 `点击左侧` 标签，`打开文件管理` 无紫色高亮。
+### 弹窗（tui-dialog）
+- 打开时用 html2canvas-pro 快照整页并转 ASCII，从弹窗中心向外涟漪扩散覆盖整页；右上角 `×` 或 `Esc` 关闭，关闭时淡出。
 
-页面之间的切换都由 `app.js` 协调，均复用 `scan-effect.js` 的扫描效果。点击主页的 `打开文件管理` 会先播放扫描，再进入文件管理器。
+## 配色
 
-## 文章阅读界面
+取自德古拉主题。左侧目录树的**目录名**为紫色；文件列表的文件类型标签配色如下：
 
-打开一个文件时，文件管理器先播放扫描过渡，再把界面交给独立的 `<tui-doc-viewer>` 组件展示正文。点击 `×` 或按 `Esc` 返回时，阅读组件会用同一套扫描效果溶解自身，再回到文件系统。
-
-扫描动画被抽成了独立的 `scan-effect.js` 模块，接收任意元素即可播放。文件管理器的目录切换、打开文件的过渡、以及阅读界面的返回过渡，都复用同一个模块，因此与任何具体组件解耦。
-
-```html
-<tui-doc-viewer hidden></tui-doc-viewer>
-```
-
-监听 `open` 事件，然后调用阅读组件的 `open`：
-
-```js
-fm.playScan(() => viewer.open(node));
-```
-
-阅读界面布局：
-
-- 左右两侧为垂直实线，与文件管理器的左右边界对齐。
-- 顶部页眉，用虚线与正文分隔。
-- 页眉左侧：紫色高亮的标题，以及小字号的 tags / date / modified / name（其他颜色）。
-- 页眉右上角：虚线矩形内的 `×`，点击返回文件系统。
-
-监听阅读组件的 `close` 事件返回文件系统：
-
-```js
-viewer.addEventListener('close', () => fm.focus());
-```
-
-阅读组件 API：
-
-| 方法 | 说明 |
-| ---- | ---- |
-| `open(node)` | 用文件节点填充并显示正文 |
-| `close()` | 隐藏并派发 `close` 事件 |
-
-事件：
-
-- `close`：点击 `×` 或按 `Esc` 时触发。
-
-## 类型配色
-
-| 类型 | 颜色来源 |
-| ---- | ---- |
-| 目录 | Cyan |
+| 类型 | 颜色 |
+| --- | --- |
+| 目录（DIR） | Cyan |
 | 代码 | Green |
 | 图片 | Pink |
 | 媒体 | Orange |
 | 压缩包 | Yellow |
 | 可执行 | Red |
 | 配置 | Purple |
-| 文本/文档 | Foreground |
+| 文本 / 文档 | Cyan |
