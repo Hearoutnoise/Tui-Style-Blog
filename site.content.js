@@ -12,9 +12,44 @@ export const fileSystem = {
   "modified": "",
   "children": [
     {
+      "name": "计算机图形学",
+      "type": "dir",
+      "modified": "Sep 13 10:24",
+      "children": [
+        {
+          "name": "SSR反射中出现多余命中的原因及解决方法.md",
+          "type": "file",
+          "size": 5710,
+          "modified": "Sep 13 12:00",
+          "path": "content/计算机图形学/SSR反射中出现多余命中的原因及解决方法.md",
+          "title": "SSR反射中出现多余命中的原因及解决方法",
+          "date": "Sep 13 2026",
+          "summary": "从单点深度比较到方案B的「两端采样 + 连续性校验」，记录屏幕空间反射命中检测的三次渐进式改进",
+          "tags": [
+            "unity",
+            "urp",
+            "ssr",
+            "shader"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "人工智能",
+      "type": "dir",
+      "modified": "",
+      "children": []
+    },
+    {
+      "name": "随笔",
+      "type": "dir",
+      "modified": "",
+      "children": []
+    },
+    {
       "name": "About",
       "type": "dir",
-      "modified": "Sep 05 14:58",
+      "modified": "Sep 05 22:58",
       "children": [
         {
           "name": "ascii-art.md",
@@ -58,7 +93,7 @@ export const fileSystem = {
         {
           "name": "Procreate",
           "type": "dir",
-          "modified": "Sep 05 16:57",
+          "modified": "Sep 06 00:57",
           "children": [
             {
               "name": "如何解决电容笔抖动.md",
@@ -76,24 +111,6 @@ export const fileSystem = {
           ]
         }
       ]
-    },
-    {
-      "name": "人工智能",
-      "type": "dir",
-      "modified": "",
-      "children": []
-    },
-    {
-      "name": "计算机图形学",
-      "type": "dir",
-      "modified": "",
-      "children": []
-    },
-    {
-      "name": "随笔",
-      "type": "dir",
-      "modified": "",
-      "children": []
     }
   ]
 };
